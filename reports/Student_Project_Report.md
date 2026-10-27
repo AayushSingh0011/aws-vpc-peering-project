@@ -4,12 +4,12 @@
 ---
 
 ## 1. Project Information
-- **Student Name:** [Your Name Here]
-- **Batch:** [Your Batch / Cohort]
+- **Student Name:** Aayush Kumar
+- **Batch:** SEP batch_1 2026
 - **Project Title:** AWS VPC Peering: Connect Two VPCs & Prove Private Connectivity
 - **AWS Region:** ap-south-1 (Asia Pacific - Mumbai)
 - **Project Completion Date:** October 2026
-- **Project Tag:** `Project = EWB-VPC-Peering` | `Student = [Your Name]`
+- **Project Tag:** `Project = EWB-VPC-Peering` | `Student = Aayush Kumar`
 
 ---
 

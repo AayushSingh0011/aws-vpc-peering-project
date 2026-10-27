@@ -99,7 +99,7 @@ flowchart TD
 aws-vpc-peering-project/
 │
 ├── README.md                                  <-- Complete documentation & defense
-├── YourName_EWB_VPC_Peering.pdf               <-- Official evaluated project report PDF
+├── Aayush Kumar_EWB_VPC_Peering.pdf           <-- Official evaluated project report PDF
 │
 ├── config/
 │   └── ssh_config                             <-- Bastion ProxyJump SSH configuration
@@ -115,7 +115,7 @@ aws-vpc-peering-project/
 ├── reports/
 │   ├── Student_Project_Report.md              <-- Full Markdown lab report
 │   ├── Student_Project_Report.html            <-- Print-ready report template
-│   └── YourName_EWB_VPC_Peering.pdf
+│   └── Aayush Kumar_EWB_VPC_Peering.pdf
 │
 ├── scripts/
 │   ├── verify_connectivity.sh                 <-- Automated bash test runner
