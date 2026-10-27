@@ -1,0 +1,34 @@
+# ==============================================================================
+# EWB Cloud Labs - AWS VPC Peering: SSH ProxyJump Configuration
+# Location: ~/.ssh/config (or %USERPROFILE%\.ssh\config on Windows)
+# ==============================================================================
+# Instructions:
+# 1. Replace <BASTION_PUBLIC_IP> with the actual Public IPv4 of ewb-bastion.
+# 2. Ensure ewb-lab.pem is located at ~/.ssh/ewb-lab.pem with permissions 400 (chmod 400 ~/.ssh/ewb-lab.pem).
+# ==============================================================================
+
+# 1. Bastion Host (Public Gateway in VPC A)
+Host ewb-bastion
+    HostName <BASTION_PUBLIC_IP>
+    User ec2-user
+    IdentityFile ~/.ssh/ewb-lab.pem
+    IdentitiesOnly yes
+    StrictHostKeyChecking accept-new
+
+# 2. Private App-A (Private Subnet in VPC A)
+Host ewb-app-a
+    HostName 10.10.2.10
+    User ec2-user
+    IdentityFile ~/.ssh/ewb-lab.pem
+    IdentitiesOnly yes
+    ProxyJump ewb-bastion
+    StrictHostKeyChecking accept-new
+
+# 3. Private App-B (Private Subnet in VPC B - Reached via Peering Connection)
+Host ewb-app-b
+    HostName 10.20.1.10
+    User ec2-user
+    IdentityFile ~/.ssh/ewb-lab.pem
+    IdentitiesOnly yes
+    ProxyJump ewb-bastion
+    StrictHostKeyChecking accept-new

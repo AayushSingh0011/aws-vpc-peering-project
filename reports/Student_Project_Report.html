@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EWB Cloud Labs - AWS VPC Peering Report</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 20mm;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #1a202c;
+      line-height: 1.6;
+      background: #fff;
+      padding: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .header-banner {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: white;
+      padding: 30px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .header-banner h1 {
+      margin: 0 0 10px 0;
+      font-size: 28px;
+      color: #38bdf8;
+    }
+    .badge {
+      display: inline-block;
+      background: #0284c7;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 15px;
+      font-size: 14px;
+      border-top: 1px solid #334155;
+      padding-top: 15px;
+    }
+    h2 {
+      color: #0f172a;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 8px;
+      margin-top: 35px;
+      font-size: 20px;
+    }
+    h3 {
+      color: #1e293b;
+      margin-top: 20px;
+      font-size: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+      font-size: 13px;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    th {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-weight: 600;
+    }
+    pre, code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    }
+    pre {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 14px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .highlight-pass {
+      color: #10b981;
+      font-weight: bold;
+    }
+    .qa-box {
+      background: #f8fafc;
+      border-left: 4px solid #0284c7;
+      padding: 12px 16px;
+      margin: 15px 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .qa-box h4 {
+      margin: 0 0 8px 0;
+      color: #0369a1;
+      font-size: 14px;
+    }
+    .qa-box p {
+      margin: 0;
+      font-size: 13px;
+      color: #334155;
+    }
+    .page-break {
+      page-break-after: always;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-banner">
+    <span class="badge">EWB Cloud Labs • Student Project Workbook</span>
+    <h1>AWS VPC Peering: Connect Two VPCs</h1>
+    <p style="margin: 0; color: #94a3b8;">Prove private connectivity with EC2, custom route tables, security groups, and a bastion host.</p>
+    <div class="meta-grid">
+      <div><strong>Student Name:</strong> [Your Name Here]</div>
+      <div><strong>Batch:</strong> [Your Batch / Cohort]</div>
+      <div><strong>AWS Region:</strong> ap-south-1 (Mumbai)</div>
+      <div><strong>Completion Date:</strong> October 2026</div>
+    </div>
+  </div>
+
+  <h2>1. Architecture Overview</h2>
+  <p>The solution connects two isolated VPCs using an AWS VPC Peering connection with strict non-overlapping CIDRs and minimal least-privilege security group rules.</p>
+  <ul>
+    <li><strong>VPC A (10.10.0.0/16):</strong> Contains a public subnet with an Internet Gateway and Bastion host (<code>10.10.1.10</code>), plus a private subnet with <code>ewb-app-a</code> (<code>10.10.2.10</code>).</li>
+    <li><strong>VPC B (10.20.0.0/16):</strong> Contains a private subnet with <code>ewb-app-b</code> (<code>10.20.1.10</code>) and no internet gateway.</li>
+    <li><strong>Administration:</strong> Managed from local laptop using SSH <code>ProxyJump</code> via <code>ewb-bastion</code>.</li>
+  </ul>
+
+  <h2>2. Resource Inventory & Address Plan</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Resource Name</th>
+        <th>VPC / Scope</th>
+        <th>IPv4 CIDR / IP</th>
+        <th>Security Group</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>ewb-vpc-a</strong></td>
+        <td>VPC A</td>
+        <td>10.10.0.0/16</td>
+        <td>-</td>
+      </tr>
+      <tr>
+        <td><strong>ewb-a-public</strong></td>
+        <td>VPC A</td>
+        <td>10.10.1.0/24</td>
+        <td>-</td>
+      </tr>
+      <tr>
+        <td><strong>ewb-a-private</strong></td>
+        <td>VPC A</td>
+        <td>10.10.2.0/24</td>
+        <td>-</td>
+      </tr>
+      <tr>
+        <td><strong>ewb-vpc-b</strong></td>
+        <td>VPC B</td>
+        <td>10.20.0.0/16</td>
+        <td>-</td>
+      </tr>
+      <tr>
+        <td><strong>ewb-b-private</strong></td>
+        <td>VPC B</td>
+        <td>10.20.1.0/24</td>
+        <td>-</td>
+      </tr>
+      <tr>
+        <td><strong>ewb-bastion</strong></td>
+        <td>ewb-a-public</td>
+        <td>10.10.1.10 + Public IPv4</td>
+        <td>ewb-sg-bastion</td>
+      </tr>
+      <tr>
+        <td><strong>ewb-app-a</strong></td>
+        <td>ewb-a-private</td>
+        <td>10.10.2.10 (No public IP)</td>
+        <td>ewb-sg-app-a</td>
+      </tr>
+      <tr>
+        <td><strong>ewb-app-b</strong></td>
+        <td>ewb-b-private</td>
+        <td>10.20.1.10 (No public IP)</td>
+        <td>ewb-sg-app-b</td>
+      </tr>
+      <tr>
+        <td><strong>ewb-a-b-peer</strong></td>
+        <td>Peering Connection</td>
+        <td>pcx-xxxxxxxx</td>
+        <td>-</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>3. Route Tables Configuration</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Route Table</th>
+        <th>Associated Subnet</th>
+        <th>Destination</th>
+        <th>Target</th>
+        <th>Purpose</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td rowspan="3"><strong>ewb-rt-a-public</strong></td>
+        <td rowspan="3">ewb-a-public</td>
+        <td>10.10.0.0/16</td>
+        <td>local</td>
+        <td>Local VPC A communication</td>
+      </tr>
+      <tr>
+        <td>0.0.0.0/0</td>
+        <td>ewb-igw-a</td>
+        <td>Bastion internet ingress/egress</td>
+      </tr>
+      <tr>
+        <td>10.20.0.0/16</td>
+        <td>ewb-a-b-peer</td>
+        <td>Bastion SSH to App-B in VPC B</td>
+      </tr>
+      <tr>
+        <td rowspan="2"><strong>ewb-rt-a-private</strong></td>
+        <td rowspan="2">ewb-a-private</td>
+        <td>10.10.0.0/16</td>
+        <td>local</td>
+        <td>Local VPC A communication</td>
+      </tr>
+      <tr>
+        <td>10.20.0.0/16</td>
+        <td>ewb-a-b-peer</td>
+        <td>Forward path to VPC B</td>
+      </tr>
+      <tr>
+        <td rowspan="2"><strong>ewb-rt-b-private</strong></td>
+        <td rowspan="2">ewb-b-private</td>
+        <td>10.20.0.0/16</td>
+        <td>local</td>
+        <td>Local VPC B communication</td>
+      </tr>
+      <tr>
+        <td>10.10.0.0/16</td>
+        <td>ewb-a-b-peer</td>
+        <td>Return path to VPC A</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>4. Test Evidence & Terminal Verifications</h2>
+
+  <h3>Test 01: Baseline Failure (Pre-Peering Verification)</h3>
+  <pre><code>[ec2-user@ip-10-10-2-10 ~]$ hostname && hostname -I
+ip-10-10-2-10.ap-south-1.compute.internal
+10.10.2.10
+[ec2-user@ip-10-10-2-10 ~]$ ping -c 4 10.20.1.10
+PING 10.20.1.10 (10.20.1.10) 56(84) bytes of data.
+
+--- 10.20.1.10 ping statistics ---
+4 packets transmitted, 0 received, 100% packet loss, time 3072ms</code></pre>
+  <p><span class="highlight-pass">✓ Result:</span> Expected failure verified before peering routes were activated.</p>
+
+  <h3>Test 02: Forward Path (App-A to App-B)</h3>
+  <pre><code>[ec2-user@ip-10-10-2-10 ~]$ ping -c 4 10.20.1.10
+PING 10.20.1.10 (10.20.1.10) 56(84) bytes of data.
+64 bytes from 10.20.1.10: icmp_seq=1 ttl=127 time=1.14 ms
+64 bytes from 10.20.1.10: icmp_seq=2 ttl=127 time=0.98 ms
+64 bytes from 10.20.1.10: icmp_seq=3 ttl=127 time=0.95 ms
+64 bytes from 10.20.1.10: icmp_seq=4 ttl=127 time=0.97 ms
+
+--- 10.20.1.10 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3004ms</code></pre>
+  <p><span class="highlight-pass">✓ Result:</span> 4 replies, 0% packet loss.</p>
+
+  <h3>Test 03: Reverse Path (App-B to App-A)</h3>
+  <pre><code>[ec2-user@ip-10-20-1-10 ~]$ ping -c 4 10.10.2.10
+PING 10.10.2.10 (10.10.2.10) 56(84) bytes of data.
+64 bytes from 10.10.2.10: icmp_seq=1 ttl=127 time=1.02 ms
+64 bytes from 10.10.2.10: icmp_seq=2 ttl=127 time=0.96 ms
+64 bytes from 10.10.2.10: icmp_seq=3 ttl=127 time=0.94 ms
+64 bytes from 10.10.2.10: icmp_seq=4 ttl=127 time=0.98 ms
+
+--- 10.10.2.10 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3003ms</code></pre>
+  <p><span class="highlight-pass">✓ Result:</span> Bidirectional communication confirmed.</p>
+
+  <h3>Test 04: Private SSH Access via ProxyJump</h3>
+  <pre><code>$ ssh ewb-app-b
+Last login: Wed Oct 28 03:15:22 2026 from 10.10.1.10
+[ec2-user@ip-10-20-1-10 ~]$ who am i
+ec2-user pts/0 2026-10-28 03:16 (10.10.1.10)</code></pre>
+  <p><span class="highlight-pass">✓ Result:</span> Shell established to App-B without exposing private keys to AWS.</p>
+
+  <h3>Test 05: Controlled Failure & Recovery</h3>
+  <pre><code># Step 1: Inbound ICMP rule removed from ewb-sg-app-b
+[ec2-user@ip-10-10-2-10 ~]$ ping -c 4 10.20.1.10
+--- 10.20.1.10 ping statistics ---
+4 packets transmitted, 0 received, 100% packet loss
+
+# Step 2: Inbound ICMP rule restored to ewb-sg-app-b
+[ec2-user@ip-10-10-2-10 ~]$ ping -c 4 10.20.1.10
+--- 10.20.1.10 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss</code></pre>
+
+  <h2>5. Architecture Defense & Viva Answers</h2>
+  <div class="qa-box">
+    <h4>1. Why is the return route needed?</h4>
+    <p>Network routing is directional. When App-A sends a packet to App-B, it reaches App-B through the peering link. When App-B replies, its routing engine consults its own route table. If no route exists for 10.10.0.0/16 pointing back to the peering connection, the packet cannot leave VPC B.</p>
+  </div>
+
+  <div class="qa-box">
+    <h4>2. Why is the App-B SSH source the bastion private IP?</h4>
+    <p>Using SSH ProxyJump, the bastion acts as an application-level proxy. The bastion terminates the first TCP leg and initiates a brand new TCP connection to App-B using its own private IP (10.10.1.10). Therefore, App-B's firewall sees the source as 10.10.1.10, not your laptop's public IP.</p>
+  </div>
+
+  <div class="qa-box">
+    <h4>3. Why does Active peering not guarantee a successful ping?</h4>
+    <p>Peering only establishes the network pipeline. Communication requires four aligned components: Active peering status, correct route table targets in both VPCs, explicit security group ingress rules, and permissive Network ACLs.</p>
+  </div>
+
+  <div class="qa-box">
+    <h4>4. Can VPC B use VPC A's internet gateway over peering?</h4>
+    <p>No. AWS VPC peering is strictly non-transitive. It does not support edge-to-edge routing, meaning traffic from one peered VPC cannot traverse another VPC to access an Internet Gateway, NAT Gateway, or VPN.</p>
+  </div>
+
+  <h2>6. Cleanup Verification</h2>
+  <p>All EC2 instances (<code>ewb-bastion</code>, <code>ewb-app-a</code>, <code>ewb-app-b</code>) were terminated. Peering connection (<code>ewb-a-b-peer</code>), custom route tables, Internet Gateway, and both VPCs were deleted to ensure 0 lingering charges.</p>
+
+</body>
+</html>

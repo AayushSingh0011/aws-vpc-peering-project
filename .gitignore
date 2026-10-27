@@ -1,0 +1,20 @@
+# Security - NEVER commit keys or credentials
+*.pem
+*.key
+*.id_rsa
+*.id_ed25519
+credentials
+.env
+
+# Terraform local state
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform.lock.hcl
+
+# OS & Temp Files
+Thumbs.db
+.DS_Store
+*~
+*.tmp
